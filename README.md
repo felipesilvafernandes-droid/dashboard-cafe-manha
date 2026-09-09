@@ -2,7 +2,7 @@
 
 Painel visual com os indicadores de custo, CMV e descarte do café da manhã, gerado a partir da planilha de contagem diária/mensal do operacional.
 
-🔗 **Link publicado:** _adicione aqui a URL do GitHub Pages depois de ativado (Settings → Pages)_
+🔗 **Link publicado:** [https://felipesilvafernandes-droid.github.io/dashboard-cafe-manha/](https://felipesilvafernandes-droid.github.io/dashboard-cafe-manha/)
 
 ## O que este painel mostra
 
@@ -47,3 +47,19 @@ Para atualizar com dados de um novo período:
 *Aba CUSTO: totais do período, CMV e composição de hóspedes/passantes (parte 5 de 5).*
 
 ## Estrutura do repositório
+
+```
+index.html                                        → o dashboard (arquivo único, sem dependências externas além de fontes/gráficos via CDN)
+CUSTO_CDM_MES_09_versao_final_com_dashboard.xlsx  → planilha original (abas CUSTO/DESCARTE intactas) + aba PAINEL com os mesmos gráficos, nativos do Excel
+images/                                           → seus prints das abas (nomes e quantidade conforme você definir)
+README.md                                         → este arquivo
+```
+
+## Como visualizar localmente
+
+- **HTML:** abra o `index.html` em qualquer navegador — não precisa de servidor nem instalação.
+- **Excel:** abra o `.xlsx` e vá até a aba **PAINEL** — os KPIs e gráficos ali são fórmulas ligadas às abas CUSTO/DESCARTE, então atualizam sozinhos se os dados de origem mudarem.
+
+## Próximos passos
+
+Esta mesma base de dados (item, categoria, quantidade, preço, valor) está estruturada para alimentar um relatório em **Power BI**, reaproveitando os mesmos agrupamentos usados aqui no HTML.
