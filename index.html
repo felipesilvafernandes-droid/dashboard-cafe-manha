@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Custo &amp; Descarte — Café da Manhã</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-0: #0a0908;
+    --bg-1: #14110d;
+    --bg-2: #1c1712;
+    --line: rgba(232, 213, 176, 0.12);
+    --gold: #d4a24e;
+    --gold-soft: #f0c987;
+    --waste: #e2542f;
+    --waste-soft: #ff8a5c;
+    --guests: #3fae8a;
+    --guests-soft: #6fd8b3;
+    --text-0: #f3ece0;
+    --text-1: #cbbfa9;
+    --text-2: #8d8072;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background:
+      radial-gradient(1100px 550px at 12% -8%, rgba(212,162,78,0.12), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(226,84,47,0.10), transparent 55%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    color: var(--text-0);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 64px;
+  }
+  .stripe {
+    position: relative;
+    overflow: hidden;
+    padding: 56px 6vw 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .stripe::before {
+    content: "";
+    position: absolute;
+    top: -60%; right: -10%;
+    width: 60%; height: 220%;
+    background: linear-gradient(100deg, transparent 40%, rgba(212,162,78,0.10) 41%, rgba(212,162,78,0.10) 44%, transparent 45%,
+                transparent 54%, rgba(226,84,47,0.10) 55%, rgba(226,84,47,0.10) 57%, transparent 58%);
+    transform: rotate(6deg);
+    pointer-events: none;
+  }
+  .eyebrow-row { display:flex; align-items:center; gap: 14px; margin-bottom: 14px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  .eyebrow { font-family:'Inter'; font-size: 13px; letter-spacing: 0.08em; color: var(--text-1); }
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: clamp(30px, 4.4vw, 54px);
+    line-height: 1.04;
+    margin: 0 0 10px;
+    color: var(--text-0);
+  }
+  .lede { font-size: 16px; color: var(--text-1); max-width: 660px; line-height: 1.55; margin: 0; }
+  .lede b { color: var(--gold-soft); font-weight: 600; }
+  .lede .w { color: var(--waste-soft); font-weight: 600; }
+
+  main { padding: 0 6vw; }
+  section { margin-top: 46px; }
+  .section-head { display:flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .section-head h2 {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 22px; margin: 0; color: var(--text-0);
+  }
+  .section-head p { margin:0; font-size: 13.5px; color: var(--text-2); }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+  }
+  .kpi {
+    background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 18px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content:""; position:absolute; top:0; left:0; right:0; height: 3px;
+    background: var(--accent, var(--gold));
+    box-shadow: 0 0 14px var(--accent, var(--gold));
+  }
+  .kpi .k-label { font-size: 12.5px; color: var(--text-2); margin: 0 0 10px; line-height:1.3; min-height: 32px; }
+  .kpi .k-value { font-family:'Oswald', sans-serif; font-weight: 600; font-size: 27px; color: var(--text-0); }
+  .kpi .k-sub { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .kpi.gold { --accent: var(--gold); }
+  .kpi.gold .k-value { color: var(--gold-soft); }
+  .kpi.waste { --accent: var(--waste); }
+  .kpi.waste .k-value { color: var(--waste-soft); }
+  .kpi.guests { --accent: var(--guests); }
+  .kpi.guests .k-value { color: var(--guests-soft); }
+
+  .panel {
+    background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 22px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content:""; position:absolute; top:0; left:0; right:0; height: 3px; background: var(--accent, var(--gold));
+  }
+  .panel h3 { font-family:'Oswald'; font-weight:500; font-size: 16px; margin: 0 0 4px; color: var(--text-0); }
+  .panel .p-note { font-size: 12.5px; color: var(--text-2); margin: 0 0 14px; }
+  .chart-wrap { position: relative; height: 320px; }
+  .chart-wrap.short { height: 240px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left; font-family:'Inter'; font-weight: 600; font-size: 11.5px;
+    letter-spacing: 0.04em; color: var(--text-2); padding: 10px 10px; border-bottom: 1px solid var(--line);
+    position: sticky; top:0; background: var(--bg-2);
+  }
+  tbody td { padding: 10px 10px; border-bottom: 1px solid rgba(232,213,176,0.06); color: var(--text-1); }
+  tbody tr:hover { background: rgba(212,162,78,0.05); }
+  .t-item { color: var(--text-0); font-weight: 500; }
+  .t-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .t-strong { color: var(--waste-soft); font-weight: 600; }
+  .table-scroll { max-height: 480px; overflow-y: auto; overflow-x: auto; margin-top: 6px; }
+  .tag { display:inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .tag-frutas { background: rgba(111,216,179,0.14); color: #7fe3bd; }
+  .tag-doces { background: rgba(226,84,47,0.16); color: var(--waste-soft); }
+  .tag-bebidas { background: rgba(79,150,214,0.16); color: #8ec4ee; }
+  .tag-laticinios { background: rgba(240,201,135,0.16); color: var(--gold-soft); }
+  .tag-proteinas { background: rgba(198,110,110,0.18); color: #e79b9b; }
+  .tag-guarnicoes { background: rgba(170,170,140,0.16); color: #c9c3a5; }
+  .tag-padaria { background: rgba(200,150,90,0.18); color: #e0b478; }
+  .tag-outros { background: rgba(140,140,140,0.14); color: #b3b3b3; }
+
+  .foot-note { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .foot-note b { color: var(--text-1); }
+
+  @media (max-width: 1080px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .stripe::before { display:none; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .stripe { padding: 40px 5vw 30px; }
+    main { padding: 0 5vw; }
+  }
+</style>
+</head>
+<body>
+
+<header class="stripe">
+  <div class="eyebrow-row"><span class="dot"></span><span class="eyebrow">RELATÓRIO OPERACIONAL · CAFÉ DA MANHÃ · COMPETÊNCIA MÊS 09 · VERSÃO FINAL</span></div>
+  <h1>Custo &amp; Descarte do Café da Manhã</h1>
+  <p class="lede">No período, o custo total dos itens contabilizados foi de <b>R$ 1.103,54</b> contra uma receita de café da manhã de R$ 3.813,00 — um CMV de <b>28.9%</b>. Desse custo, <span class="w">R$ 412,61 (37.4%)</span> correspondeu a itens descartados, sem retorno ao estoque nem consumo pelo hóspede.</p>
+</header>
+
+<main>
+
+  <section>
+    <div class="section-head">
+      <h2>Visão Geral</h2>
+      <p>Fonte: abas CUSTO e DESCARTE do arquivo CUSTO_CDM_MES_09_versao_final.xlsx</p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi gold">
+        <p class="k-label">Custo total do período</p>
+        <p class="k-value">R$ 1.103,54</p>
+        <p class="k-sub">98 de 141 itens com movimento</p>
+      </div>
+      <div class="kpi gold">
+        <p class="k-label">CMV (custo ÷ receita CDM)</p>
+        <p class="k-value">28.9%</p>
+        <p class="k-sub">receita de R$ 3.813,00 no período</p>
+      </div>
+      <div class="kpi waste">
+        <p class="k-label">Valor total descartado</p>
+        <p class="k-value">R$ 412,61</p>
+        <p class="k-sub">42 itens com descarte registrado</p>
+      </div>
+      <div class="kpi waste">
+        <p class="k-label">Descarte sobre o custo</p>
+        <p class="k-value">37.4%</p>
+        <p class="k-sub">10.8% da receita do período</p>
+      </div>
+      <div class="kpi guests">
+        <p class="k-label">Pessoas atendidas</p>
+        <p class="k-value">80</p>
+        <p class="k-sub">73 diárias c/ café incluso + 7 passantes</p>
+      </div>
+      <div class="kpi waste">
+        <p class="k-label">Descarte por pessoa</p>
+        <p class="k-value">R$ 5,16</p>
+        <p class="k-sub">custo/pessoa de R$ 13,79</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Onde o Descarte Está Concentrado</h2>
+      <p>Os 10 itens abaixo somam a maior parte do valor perdido</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Top 10 itens por valor descartado</h3>
+        <p class="p-note">Ordenado do maior para o menor prejuízo, em reais</p>
+        <div class="chart-wrap"><canvas id="chartTop10"></canvas></div>
+      </div>
+      <div class="panel" style="--accent: var(--waste);">
+        <h3>Descarte por categoria</h3>
+        <p class="p-note">Participação de cada grupo de itens no valor total descartado</p>
+        <div class="chart-wrap"><canvas id="chartCategoria"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Composição do Atendimento</h2>
+      <p>Receita de cobertura de café da manhã, por origem do hóspede</p>
+    </div>
+    <div class="grid-3">
+      <div class="panel" style="--accent: var(--guests);">
+        <h3>Receita por origem</h3>
+        <p class="p-note">Hóspedes com café incluso vs. passantes</p>
+        <div class="chart-wrap short"><canvas id="chartGuests"></canvas></div>
+      </div>
+      <div class="panel" style="grid-column: span 2; --accent: var(--gold);">
+        <h3>Resumo do atendimento</h3>
+        <p class="p-note">Base de cálculo do CMV e do descarte por pessoa</p>
+        <table style="margin-top:14px;">
+          <thead><tr><th>Origem</th><th style="text-align:right;">Qtd. pessoas</th><th style="text-align:right;">Valor unit.</th><th style="text-align:right;">Receita</th></tr></thead>
+          <tbody>
+            <tr><td class="t-item">Hóspedes (café incluso na diária)</td><td class="t-num">73</td><td class="t-num">R$ 46,00</td><td class="t-num t-strong" style="color:var(--gold-soft);">R$ 3.358,00</td></tr>
+            <tr><td class="t-item">Passantes (café avulso)</td><td class="t-num">7</td><td class="t-num">R$ 65,00</td><td class="t-num t-strong" style="color:var(--gold-soft);">R$ 455,00</td></tr>
+            <tr><td class="t-item"><b>Total</b></td><td class="t-num"><b>80</b></td><td class="t-num">—</td><td class="t-num t-strong" style="color:var(--gold-soft);"><b>R$ 3.813,00</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Demonstrativo Completo de Descarte</h2>
+      <p>42 itens · aba DESCARTE</p>
+    </div>
+    <div class="panel" style="--accent: var(--waste);">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Categoria</th><th style="text-align:right;">Qtd. descartada</th><th style="text-align:right;">Preço/kg</th><th style="text-align:right;">Valor</th><th style="text-align:right;">% do total</th></tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="t-item">Chocolate</td>
+          <td class="t-tag"><span class="tag tag-doces">Doces</span></td>
+          <td class="t-num">0,522 kg</td>
+          <td class="t-num">R$ 77,14</td>
+          <td class="t-num t-strong">R$ 40,27</td>
+          <td class="t-num">9,8%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Pão De Queijo</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">1,914 kg</td>
+          <td class="t-num">R$ 16,25</td>
+          <td class="t-num t-strong">R$ 31,10</td>
+          <td class="t-num">7,5%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Ovo Mexido</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">1,616 kg</td>
+          <td class="t-num">R$ 16,90</td>
+          <td class="t-num t-strong">R$ 27,31</td>
+          <td class="t-num">6,6%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Leite Integral</td>
+          <td class="t-tag"><span class="tag tag-laticinios">Laticínios</span></td>
+          <td class="t-num">4,910 kg</td>
+          <td class="t-num">R$ 5,35</td>
+          <td class="t-num t-strong">R$ 26,27</td>
+          <td class="t-num">6,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Suco De Laranja Com Mamao</td>
+          <td class="t-tag"><span class="tag tag-bebidas">Bebidas</span></td>
+          <td class="t-num">0,842 kg</td>
+          <td class="t-num">R$ 30,85</td>
+          <td class="t-num t-strong">R$ 25,98</td>
+          <td class="t-num">6,3%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Suco De Melancia</td>
+          <td class="t-tag"><span class="tag tag-bebidas">Bebidas</span></td>
+          <td class="t-num">2,500 kg</td>
+          <td class="t-num">R$ 9,57</td>
+          <td class="t-num t-strong">R$ 23,93</td>
+          <td class="t-num">5,8%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão Francês 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">27,000 kg</td>
+          <td class="t-num">R$ 0,68</td>
+          <td class="t-num t-strong">R$ 18,36</td>
+          <td class="t-num">4,5%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mix De Saladas</td>
+          <td class="t-tag"><span class="tag tag-guarnicoes">Guarnições</span></td>
+          <td class="t-num">0,230 kg</td>
+          <td class="t-num">R$ 56,07</td>
+          <td class="t-num t-strong">R$ 12,90</td>
+          <td class="t-num">3,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Calabresa</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">0,672 kg</td>
+          <td class="t-num">R$ 18,99</td>
+          <td class="t-num t-strong">R$ 12,76</td>
+          <td class="t-num">3,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Peito De Peru</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">0,270 kg</td>
+          <td class="t-num">R$ 44,41</td>
+          <td class="t-num t-strong">R$ 11,99</td>
+          <td class="t-num">2,9%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Salsicha</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">1,476 kg</td>
+          <td class="t-num">R$ 7,61</td>
+          <td class="t-num t-strong">R$ 11,23</td>
+          <td class="t-num">2,7%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mussarela</td>
+          <td class="t-tag"><span class="tag tag-laticinios">Laticínios</span></td>
+          <td class="t-num">0,252 kg</td>
+          <td class="t-num">R$ 41,90</td>
+          <td class="t-num t-strong">R$ 10,56</td>
+          <td class="t-num">2,6%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Melão</td>
+          <td class="t-tag"><span class="tag tag-frutas">Frutas</span></td>
+          <td class="t-num">0,972 kg</td>
+          <td class="t-num">R$ 10,60</td>
+          <td class="t-num t-strong">R$ 10,30</td>
+          <td class="t-num">2,5%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Ciabata Simples</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">10,000 kg</td>
+          <td class="t-num">R$ 0,99</td>
+          <td class="t-num t-strong">R$ 9,90</td>
+          <td class="t-num">2,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Presunto</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">0,342 kg</td>
+          <td class="t-num">R$ 28,90</td>
+          <td class="t-num t-strong">R$ 9,88</td>
+          <td class="t-num">2,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Queijo Prato</td>
+          <td class="t-tag"><span class="tag tag-laticinios">Laticínios</span></td>
+          <td class="t-num">0,230 kg</td>
+          <td class="t-num">R$ 41,78</td>
+          <td class="t-num t-strong">R$ 9,61</td>
+          <td class="t-num">2,3%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Bisnaga C/ Coco 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">10,000 kg</td>
+          <td class="t-num">R$ 0,96</td>
+          <td class="t-num t-strong">R$ 9,60</td>
+          <td class="t-num">2,3%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Suco De Laranja</td>
+          <td class="t-tag"><span class="tag tag-bebidas">Bebidas</span></td>
+          <td class="t-num">1,022 kg</td>
+          <td class="t-num">R$ 8,84</td>
+          <td class="t-num t-strong">R$ 9,03</td>
+          <td class="t-num">2,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão Francês Integral 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">10,000 kg</td>
+          <td class="t-num">R$ 0,85</td>
+          <td class="t-num t-strong">R$ 8,50</td>
+          <td class="t-num">2,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Queijo Minas</td>
+          <td class="t-tag"><span class="tag tag-laticinios">Laticínios</span></td>
+          <td class="t-num">0,213 kg</td>
+          <td class="t-num">R$ 36,65</td>
+          <td class="t-num t-strong">R$ 7,81</td>
+          <td class="t-num">1,9%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Bisnaga C/ Creme 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">8,000 kg</td>
+          <td class="t-num">R$ 0,96</td>
+          <td class="t-num t-strong">R$ 7,68</td>
+          <td class="t-num">1,9%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Baguete Simples 60Cm</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">0,500 kg</td>
+          <td class="t-num">R$ 11,66</td>
+          <td class="t-num t-strong">R$ 5,83</td>
+          <td class="t-num">1,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Melancia</td>
+          <td class="t-tag"><span class="tag tag-frutas">Frutas</span></td>
+          <td class="t-num">1,822 kg</td>
+          <td class="t-num">R$ 3,19</td>
+          <td class="t-num t-strong">R$ 5,81</td>
+          <td class="t-num">1,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Brioche Simples</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">5,000 kg</td>
+          <td class="t-num">R$ 1,08</td>
+          <td class="t-num t-strong">R$ 5,40</td>
+          <td class="t-num">1,3%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Roseta De Açúcar</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">5,000 kg</td>
+          <td class="t-num">R$ 1,01</td>
+          <td class="t-num t-strong">R$ 5,05</td>
+          <td class="t-num">1,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Ovo Cozido</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">10,000 kg</td>
+          <td class="t-num">R$ 0,50</td>
+          <td class="t-num t-strong">R$ 5,00</td>
+          <td class="t-num">1,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão Multigrão Resondo 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">4,000 kg</td>
+          <td class="t-num">R$ 1,21</td>
+          <td class="t-num t-strong">R$ 4,84</td>
+          <td class="t-num">1,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão De Beterraba 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">4,000 kg</td>
+          <td class="t-num">R$ 1,21</td>
+          <td class="t-num t-strong">R$ 4,84</td>
+          <td class="t-num">1,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Roseta De Laranja</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">5,000 kg</td>
+          <td class="t-num">R$ 0,96</td>
+          <td class="t-num t-strong">R$ 4,80</td>
+          <td class="t-num">1,2%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Tomate Assado</td>
+          <td class="t-tag"><span class="tag tag-guarnicoes">Guarnições</span></td>
+          <td class="t-num">0,774 kg</td>
+          <td class="t-num">R$ 5,95</td>
+          <td class="t-num t-strong">R$ 4,61</td>
+          <td class="t-num">1,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Suco Detox</td>
+          <td class="t-tag"><span class="tag tag-bebidas">Bebidas</span></td>
+          <td class="t-num">0,500 kg</td>
+          <td class="t-num">R$ 8,84</td>
+          <td class="t-num t-strong">R$ 4,42</td>
+          <td class="t-num">1,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Milho</td>
+          <td class="t-tag"><span class="tag tag-guarnicoes">Guarnições</span></td>
+          <td class="t-num">0,530 kg</td>
+          <td class="t-num">R$ 8,12</td>
+          <td class="t-num t-strong">R$ 4,30</td>
+          <td class="t-num">1,0%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Quiche</td>
+          <td class="t-tag"><span class="tag tag-proteinas">Proteínas</span></td>
+          <td class="t-num">0,348 kg</td>
+          <td class="t-num">R$ 11,85</td>
+          <td class="t-num t-strong">R$ 4,12</td>
+          <td class="t-num">1,0%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão De Batata Simples 30G</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">4,000 kg</td>
+          <td class="t-num">R$ 0,99</td>
+          <td class="t-num t-strong">R$ 3,96</td>
+          <td class="t-num">1,0%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Batata Doce</td>
+          <td class="t-tag"><span class="tag tag-guarnicoes">Guarnições</span></td>
+          <td class="t-num">0,646 kg</td>
+          <td class="t-num">R$ 5,36</td>
+          <td class="t-num t-strong">R$ 3,46</td>
+          <td class="t-num">0,8%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Pão De Milho Redondo</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">3,000 kg</td>
+          <td class="t-num">R$ 0,99</td>
+          <td class="t-num t-strong">R$ 2,97</td>
+          <td class="t-num">0,7%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Bolo</td>
+          <td class="t-tag"><span class="tag tag-doces">Doces</span></td>
+          <td class="t-num">0,386 kg</td>
+          <td class="t-num">R$ 7,01</td>
+          <td class="t-num t-strong">R$ 2,71</td>
+          <td class="t-num">0,7%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mini Roseta De Coco</td>
+          <td class="t-tag"><span class="tag tag-padaria">Padaria</span></td>
+          <td class="t-num">2,000 kg</td>
+          <td class="t-num">R$ 1,01</td>
+          <td class="t-num t-strong">R$ 2,02</td>
+          <td class="t-num">0,5%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Abacaxi</td>
+          <td class="t-tag"><span class="tag tag-frutas">Frutas</span></td>
+          <td class="t-num">0,448 kg</td>
+          <td class="t-num">R$ 4,05</td>
+          <td class="t-num t-strong">R$ 1,81</td>
+          <td class="t-num">0,4%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Iogurte De Morango</td>
+          <td class="t-tag"><span class="tag tag-laticinios">Laticínios</span></td>
+          <td class="t-num">0,080 kg</td>
+          <td class="t-num">R$ 15,60</td>
+          <td class="t-num t-strong">R$ 1,25</td>
+          <td class="t-num">0,3%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Mamao</td>
+          <td class="t-tag"><span class="tag tag-frutas">Frutas</span></td>
+          <td class="t-num">0,102 kg</td>
+          <td class="t-num">R$ 4,33</td>
+          <td class="t-num t-strong">R$ 0,44</td>
+          <td class="t-num">0,1%</td>
+        </tr>
+        <tr>
+          <td class="t-item">Salada De Frutas</td>
+          <td class="t-tag"><span class="tag tag-frutas">Frutas</span></td>
+          <td class="t-num">0,578 kg</td>
+          <td class="t-num">—</td>
+          <td class="t-num t-strong">R$ 0,00</td>
+          <td class="t-num">0,0%</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot-note">
+    <b>Notas sobre a base:</b> a aba DESCARTE lista os itens descartados no período, com quantidade, preço/kg e valor próprios. O indicador de CMV usa a receita de café da manhã calculada na própria planilha (diárias com café incluso + passantes), não o número de pessoas em si. O arquivo original tem uma célula com erro de fórmula (D147, aba CUSTO) que não afeta nenhum total aqui apresentado. Este HTML foi estruturado para servir de base ao relatório em Power BI — os agrupamentos (categoria, ranking por item, CMV, composição de atendimento) podem virar visuais diretamente, e os itens já estão qualificados por categoria para facilitar segmentações.
+  </p>
+
+</main>
+
+<script>
+const goldSoft = '#f0c987', waste = '#e2542f', wasteSoft='#ff8a5c', guests='#3fae8a', guestsSoft='#6fd8b3';
+const textMuted = '#8d8072';
+
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = textMuted;
+
+new Chart(document.getElementById('chartTop10'), {
+  type: 'bar',
+  data: {
+    labels: ["Chocolate", "Pão De Queijo", "Ovo Mexido", "Leite Integral", "Suco De Laranja Com Mamao", "Suco De Melancia", "Mini Pão Francês 30G", "Mix De Saladas", "Calabresa", "Peito De Peru"],
+    datasets: [{
+      data: [40.27, 31.1, 27.31, 26.27, 25.98, 23.93, 18.36, 12.9, 12.76, 11.99],
+      backgroundColor: wasteSoft,
+      borderRadius: 4,
+      barThickness: 16,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: (c) => 'R$ ' + c.parsed.x.toFixed(2).replace('.', ',') } } },
+    scales: {
+      x: { grid: { color: 'rgba(232,213,176,0.08)' }, ticks: { callback: (val) => 'R$ ' + val } },
+      y: { grid: { display: false }, ticks: { font: { size: 11.5 } } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartCategoria'), {
+  type: 'doughnut',
+  data: {
+    labels: ["Padaria", "Proteínas", "Bebidas", "Laticínios", "Doces", "Guarnições", "Frutas"],
+    datasets: [{
+      data: [124.85, 82.29, 63.36, 55.5, 42.98, 25.27, 18.36],
+      backgroundColor: ['#e2542f','#d4a24e','#c66e6e','#f0c987','#e0b478','#7fe3bd','#8ec4ee'],
+      borderColor: '#14110d',
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 10, padding: 12, font: { size: 11.5 } } },
+      tooltip: { callbacks: { label: (c) => c.label + ': R$ ' + c.parsed.toFixed(2).replace('.', ',') } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartGuests'), {
+  type: 'doughnut',
+  data: {
+    labels: ["Hóspedes (Café Incluso)", "Passantes (Avulso)"],
+    datasets: [{
+      data: [3358, 455],
+      backgroundColor: [guestsSoft, '#2c7d61'],
+      borderColor: '#14110d',
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10.5 } } },
+      tooltip: { callbacks: { label: (c) => c.label + ': R$ ' + c.parsed.toFixed(2).replace('.', ',') } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
