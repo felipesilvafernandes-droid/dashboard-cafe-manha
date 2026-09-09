@@ -25,9 +25,6 @@ Para atualizar com dados de um novo período:
 
 ## Imagens
 
-Legendas prontas para colar no README junto de cada print (ajuste o nome do arquivo conforme como você salvar):
-
-```markdown
 ![Painel de custo e descarte — KPIs e gráficos](images/painel-dashboard.png)
 *Aba PAINEL: indicadores de custo, CMV e descarte, e os três gráficos — top 10 itens descartados, descarte por categoria e composição de receita por origem do hóspede.*
 
@@ -35,28 +32,18 @@ Legendas prontas para colar no README junto de cada print (ajuste o nome do arqu
 *Aba DESCARTE: os 42 itens descartados no período, com quantidade, preço por kg e valor de cada um.*
 
 ![Aba CUSTO — parte 1](images/custo-parte-1.png)
-*Aba CUSTO: lista de itens do cardápio com peso inicial, reposição, volta, consumo, preço/kg e valor (parte 1).*
+*Aba CUSTO: lista de itens do cardápio com peso inicial, reposição, volta, consumo, preço/kg e valor (parte 1 de 5).*
 
 ![Aba CUSTO — parte 2](images/custo-parte-2.png)
-*Aba CUSTO: continuação da lista de itens (parte 2).*
-```
+*Aba CUSTO: continuação da lista de itens (parte 2 de 5).*
 
-Como a aba CUSTO tem 141 itens, provavelmente vai precisar de mais de um print para cobrir tudo com texto legível — duplique o último bloco (parte 3, parte 4...) para cada captura adicional. Só a última parte de todas deveria incluir a legenda `*Aba CUSTO: totais do período, CMV e composição de hóspedes/passantes.*`, se você separar essa área de totais num print à parte.
+![Aba CUSTO — parte 3](images/custo-parte-3.png)
+*Aba CUSTO: continuação da lista de itens (parte 3 de 5).*
+
+![Aba CUSTO — parte 4](images/custo-parte-4.png)
+*Aba CUSTO: continuação da lista de itens (parte 4 de 5).*
+
+![Aba CUSTO — totais do período](images/custo-parte-5-totais.png)
+*Aba CUSTO: totais do período, CMV e composição de hóspedes/passantes (parte 5 de 5).*
 
 ## Estrutura do repositório
-
-```
-index.html                                        → o dashboard (arquivo único, sem dependências externas além de fontes/gráficos via CDN)
-CUSTO_CDM_MES_09_versao_final_com_dashboard.xlsx  → planilha original (abas CUSTO/DESCARTE intactas) + aba PAINEL com os mesmos gráficos, nativos do Excel
-images/                                           → seus prints das abas (nomes e quantidade conforme você definir)
-README.md                                         → este arquivo
-```
-
-## Como visualizar localmente
-
-- **HTML:** abra o `index.html` em qualquer navegador — não precisa de servidor nem instalação.
-- **Excel:** abra o `.xlsx` e vá até a aba **PAINEL** — os KPIs e gráficos ali são fórmulas ligadas às abas CUSTO/DESCARTE, então atualizam sozinhos se os dados de origem mudarem.
-
-## Próximos passos
-
-Esta mesma base de dados (item, categoria, quantidade, preço, valor) está estruturada para alimentar um relatório em **Power BI**, reaproveitando os mesmos agrupamentos usados aqui no HTML.
